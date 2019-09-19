@@ -11,9 +11,9 @@ from luminoth.utils.checkpoint_downloader import get_checkpoint_file
 
 
 # Default RGB means used commonly.
-_R_MEAN = 123.68
-_G_MEAN = 116.78
-_B_MEAN = 103.94
+_R_MEAN = 100.00
+_G_MEAN = 100.00
+_B_MEAN = 100.00
 
 VALID_ARCHITECTURES = set([
     'resnet_v1_50',
@@ -177,17 +177,18 @@ class BaseNetwork(snt.AbstractModule):
         return inputs - [means]
 
     def _normalize(self, inputs):
-        """Normalize between -1.0 to 1.0.
+        """Z-Normalize the image i.e, (input-mean)/std. Shift the mean and std to 0 and 1 respectively.
 
         Args:
             inputs: A Tensor of images we want to normalize. Its shape is
                 (1, height, width, num_channels).
         Returns:
-            outputs: A Tensor of images normalized between -1 and 1.
+            outputs: A Tensor of z-normalized images.
                 Its shape is the same as the input.
         """
-        inputs = inputs / 255.
-        inputs = (inputs - 0.5) * 2.
+
+        mean,var=tf.nn.moments(inputs,(1,2))
+        inputs= (inputs-mean)/tf.sqrt(var)
         return inputs
 
     def get_checkpoint_file(self):
